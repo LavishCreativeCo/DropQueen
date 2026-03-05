@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drop Queen — Technical Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --pink: #ff3e8a;
+    --pink-light: #ff85b3;
+    --pink-pale: #ffe0ef;
+    --gold: #f5c842;
+    --purple: #9b5de5;
+    --teal: #00c9b1;
+    --white: #fafafa;
+    --grey: #1e1e2e;
+    --grey-light: #2e2e42;
+    --text-muted: #888;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+background: var(–black);
+color: var(–white);
+font-family: ‘DM Sans’, sans-serif;
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* Background grain */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘noise’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23noise)’ opacity=‘0.04’/%3E%3C/svg%3E”);
+pointer-events: none;
+z-index: 0;
+}
+
+.page {
+max-width: 1100px;
+margin: 0 auto;
+padding: 60px 40px;
+position: relative;
+z-index: 1;
+}
+
+/* Header */
+.header {
+text-align: center;
+margin-bottom: 70px;
+animation: fadeDown 0.8s ease both;
+}
+
+.crown {
+font-size: 52px;
+display: block;
+margin-bottom: 12px;
+animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+0%, 100% { transform: translateY(0); }
+50% { transform: translateY(-8px); }
+}
+
+.title {
+font-family: ‘Playfair Display’, serif;
+font-size: 56px;
+font-weight: 900;
+background: linear-gradient(135deg, var(–pink), var(–gold), var(–pink-light));
+-webkit-background-clip: text;
+-webkit-text-fill-color: transparent;
+background-clip: text;
+line-height: 1.1;
+letter-spacing: -1px;
+}
+
+.subtitle {
+font-size: 14px;
+color: var(–text-muted);
+letter-spacing: 3px;
+text-transform: uppercase;
+margin-top: 12px;
+font-family: ‘DM Mono’, monospace;
+}
+
+.tagline {
+margin-top: 20px;
+font-size: 15px;
+color: var(–pink-light);
+font-style: italic;
+}
+
+/* Section Labels */
+.section-label {
+font-family: ‘DM Mono’, monospace;
+font-size: 10px;
+letter-spacing: 3px;
+text-transform: uppercase;
+color: var(–pink);
+margin-bottom: 16px;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.section-label::after {
+content: ‘’;
+flex: 1;
+height: 1px;
+background: linear-gradient(to right, var(–pink), transparent);
+}
+
+/* LAYER BLOCKS */
+.layer {
+margin-bottom: 24px;
+animation: fadeUp 0.6s ease both;
+}
+
+.layer:nth-child(1) { animation-delay: 0.1s; }
+.layer:nth-child(2) { animation-delay: 0.2s; }
+.layer:nth-child(3) { animation-delay: 0.3s; }
+.layer:nth-child(4) { animation-delay: 0.4s; }
+.layer:nth-child(5) { animation-delay: 0.5s; }
+.layer:nth-child(6) { animation-delay: 0.6s; }
+
+@keyframes fadeUp {
+from { opacity: 0; transform: translateY(24px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeDown {
+from { opacity: 0; transform: translateY(-20px); }
+to { opacity: 1; transform: translateY(0); }
+}
+
+.layer-inner {
+background: var(–grey);
+border-radius: 16px;
+padding: 28px 32px;
+border: 1px solid var(–grey-light);
+position: relative;
+overflow: hidden;
+}
+
+.layer-inner::before {
+content: ‘’;
+position: absolute;
+top: 0; left: 0; right: 0;
+height: 2px;
+}
+
+.layer-data .layer-inner::before { background: linear-gradient(to right, var(–teal), transparent); }
+.layer-pipeline .layer-inner::before { background: linear-gradient(to right, var(–purple), transparent); }
+.layer-models .layer-inner::before { background: linear-gradient(to right, var(–pink), transparent); }
+.layer-api .layer-inner::before { background: linear-gradient(to right, var(–gold), transparent); }
+.layer-output .layer-inner::before { background: linear-gradient(to right, var(–pink-light), transparent); }
+
+.layer-title {
+font-family: ‘Playfair Display’, serif;
+font-size: 18px;
+font-weight: 700;
+margin-bottom: 20px;
+display: flex;
+align-items: center;
+gap: 10px;
+}
+
+.layer-title .icon {
+font-size: 20px;
+}
+
+/* Cards inside layers */
+.cards {
+display: grid;
+gap: 14px;
+}
+
+.cards-3 { grid-template-columns: repeat(3, 1fr); }
+.cards-2 { grid-template-columns: repeat(2, 1fr); }
+.cards-4 { grid-template-columns: repeat(4, 1fr); }
+
+.card {
+background: var(–black);
+border-radius: 12px;
+padding: 18px 20px;
+border: 1px solid #2a2a3a;
+transition: all 0.3s ease;
+position: relative;
+overflow: hidden;
+}
+
+.card:hover {
+transform: translateY(-3px);
+border-color: var(–pink);
+box-shadow: 0 8px 30px rgba(255, 62, 138, 0.15);
+}
+
+.card-icon {
+font-size: 24px;
+margin-bottom: 8px;
+display: block;
+}
+
+.card-title {
+font-weight: 500;
+font-size: 13px;
+margin-bottom: 4px;
+color: var(–white);
+}
+
+.card-desc {
+font-size: 11px;
+color: var(–text-muted);
+line-height: 1.5;
+font-family: ‘DM Mono’, monospace;
+}
+
+.card-tag {
+display: inline-block;
+font-size: 9px;
+font-family: ‘DM Mono’, monospace;
+letter-spacing: 1px;
+text-transform: uppercase;
+padding: 3px 8px;
+border-radius: 4px;
+margin-top: 8px;
+}
+
+.tag-teal { background: rgba(0, 201, 177, 0.15); color: var(–teal); }
+.tag-pink { background: rgba(255, 62, 138, 0.15); color: var(–pink); }
+.tag-gold { background: rgba(245, 200, 66, 0.15); color: var(–gold); }
+.tag-purple { background: rgba(155, 93, 229, 0.15); color: var(–purple); }
+
+/* Arrows */
+.arrow {
+display: flex;
+justify-content: center;
+align-items: center;
+margin: 6px 0;
+gap: 8px;
+color: var(–text-muted);
+font-size: 11px;
+font-family: ‘DM Mono’, monospace;
+letter-spacing: 1px;
+}
+
+.arrow-line {
+width: 2px;
+height: 28px;
+background: linear-gradient(to bottom, var(–pink), var(–purple));
+border-radius: 2px;
+margin: 0 auto;
+position: relative;
+}
+
+.arrow-line::after {
+content: ‘▼’;
+position: absolute;
+bottom: -14px;
+left: 50%;
+transform: translateX(-50%);
+color: var(–purple);
+font-size: 10px;
+}
+
+/* Tech Stack Row */
+.tech-row {
+display: flex;
+flex-wrap: wrap;
+gap: 10px;
+margin-top: 16px;
+}
+
+.tech-pill {
+background: var(–black);
+border: 1px solid var(–grey-light);
+border-radius: 100px;
+padding: 6px 14px;
+font-size: 11px;
+font-family: ‘DM Mono’, monospace;
+color: var(–text-muted);
+transition: all 0.2s;
+cursor: default;
+}
+
+.tech-pill:hover {
+border-color: var(–pink);
+color: var(–pink);
+}
+
+/* Flow connector between models and api */
+.merge-arrow {
+display: flex;
+justify-content: center;
+align-items: flex-end;
+gap: 0;
+height: 50px;
+margin: 4px 0;
+position: relative;
+}
+
+.merge-arrow svg {
+width: 300px;
+height: 50px;
+}
+
+/* Portfolio section */
+.portfolio {
+margin-top: 50px;
+padding: 32px;
+background: linear-gradient(135deg, rgba(255,62,138,0.08), rgba(155,93,229,0.08));
+border-radius: 16px;
+border: 1px solid rgba(255,62,138,0.2);
+animation: fadeUp 0.6s ease 0.7s both;
+}
+
+.portfolio-title {
+font-family: ‘Playfair Display’, serif;
+font-size: 20px;
+margin-bottom: 20px;
+color: var(–pink-light);
+}
+
+.portfolio-grid {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 14px;
+}
+
+.portfolio-card {
+background: rgba(0,0,0,0.4);
+border-radius: 10px;
+padding: 16px;
+border: 1px solid #2a2a3a;
+}
+
+.portfolio-card.active {
+border-color: var(–pink);
+background: rgba(255,62,138,0.08);
+}
+
+.portfolio-card .num {
+font-family: ‘DM Mono’, monospace;
+font-size: 10px;
+color: var(–text-muted);
+margin-bottom: 6px;
+}
+
+.portfolio-card .pname {
+font-weight: 600;
+font-size: 13px;
+margin-bottom: 4px;
+}
+
+.portfolio-card .pdesc {
+font-size: 11px;
+color: var(–text-muted);
+}
+
+.portfolio-card.active .pname {
+color: var(–pink);
+}
+
+/* Footer */
+.footer {
+text-align: center;
+margin-top: 60px;
+padding-top: 30px;
+border-top: 1px solid var(–grey-light);
+color: var(–text-muted);
+font-size: 12px;
+font-family: ‘DM Mono’, monospace;
+animation: fadeUp 0.6s ease 0.8s both;
+}
+
+.footer span {
+color: var(–pink);
+}
+
+@media (max-width: 768px) {
+.cards-3, .cards-4 { grid-template-columns: 1fr 1fr; }
+.cards-2 { grid-template-columns: 1fr; }
+.portfolio-grid { grid-template-columns: 1fr; }
+.title { font-size: 36px; }
+}
+</style>
+
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+
+  <div class="header">
+    <span class="crown">👑</span>
+    <h1 class="title">Drop Queen</h1>
+    <p class="subtitle">Technical Architecture — CISC 610 MLOps · Spring 2026</p>
+    <p class="tagline">"GoVirallQ predicts what goes viral. Drop Queen predicts what sells because of it."</p>
+  </div>
+
+  <!-- LAYER 1: DATA SOURCES -->
+
+  <div class="layer layer-data">
+    <div class="section-label">01 · Data Sources</div>
+    <div class="layer-inner">
+      <div class="layer-title"><span class="icon">🗄️</span> Raw Data Ingestion</div>
+      <div class="cards cards-3">
+        <div class="card">
+          <span class="card-icon">📦</span>
+          <div class="card-title">Amazon Sales Data</div>
+          <div class="card-desc">Historical product demand, sales rank, and review data across beauty & lifestyle categories</div>
+          <span class="card-tag tag-teal">Kaggle</span>
+        </div>
+        <div class="card">
+          <span class="card-icon">🎵</span>
+          <div class="card-title">TikTok Trend Data</div>
+          <div class="card-desc">Viral product engagement signals — views, shares, hashtag volume, and shop clicks</div>
+          <span class="card-tag tag-pink">Kaggle API</span>
+        </div>
+        <div class="card">
+          <span class="card-icon">📈</span>
+          <div class="card-title">Google Trends API</div>
+          <div class="card-desc">Real-time search interest signals by product keyword and beauty category</div>
+          <span class="card-tag tag-gold">Free API</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"></div></div>
+
+  <!-- LAYER 2: DATA PIPELINE -->
+
+  <div class="layer layer-pipeline">
+    <div class="section-label">02 · Data Pipeline</div>
+    <div class="layer-inner">
+      <div class="layer-title"><span class="icon">⚙️</span> Processing & Feature Engineering</div>
+      <div class="cards cards-4">
+        <div class="card">
+          <span class="card-icon">🧹</span>
+          <div class="card-title">Data Cleaning</div>
+          <div class="card-desc">Remove nulls, duplicates, and outliers from raw datasets</div>
+          <span class="card-tag tag-purple">Pandas</span>
+        </div>
+        <div class="card">
+          <span class="card-icon">🔧</span>
+          <div class="card-title">Feature Engineering</div>
+          <div class="card-desc">Create lag features, rolling averages, and social signal scores</div>
+          <span class="card-tag tag-purple">NumPy</span>
+        </div>
+        <div class="card">
+          <span class="card-icon">🔗</span>
+          <div class="card-title">Data Merging</div>
+          <div class="card-desc">Join Amazon sales data with TikTok signals by product & date</div>
+          <span class="card-tag tag-purple">Pandas</span>
+        </div>
+        <div class="card">
+          <span class="card-icon">📊</span>
+          <div class="card-title">EDA & Validation</div>
+          <div class="card-desc">Exploratory analysis and data quality checks before modeling</div>
+          <span class="card-tag tag-purple">Scikit-learn</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"></div></div>
+
+  <!-- LAYER 3: ML MODELS -->
+
+  <div class="layer layer-models">
+    <div class="section-label">03 · Machine Learning Models</div>
+    <div class="layer-inner">
+      <div class="layer-title"><span class="icon">🧠</span> Dual Model Architecture</div>
+      <div class="cards cards-2">
+        <div class="card">
+          <span class="card-icon">📅</span>
+          <div class="card-title">Model 1 — Time Series Forecasting</div>
+          <div class="card-desc">Predicts weekly product demand 2 weeks in advance using historical Amazon sales patterns. Trained with Prophet and LSTM neural networks.</div>
+          <div class="tech-row">
+            <span class="tech-pill">Prophet</span>
+            <span class="tech-pill">LSTM</span>
+            <span class="tech-pill">TensorFlow</span>
+            <span class="tech-pill">MLflow</span>
+          </div>
+        </div>
+        <div class="card">
+          <span class="card-icon">🔥</span>
+          <div class="card-title">Model 2 — Trend Detection</div>
+          <div class="card-desc">Detects which products are gaining social momentum before they peak. Uses TikTok engagement signals and Google Trends as early warning indicators.</div>
+          <div class="tech-row">
+            <span class="tech-pill">XGBoost</span>
+            <span class="tech-pill">Scikit-learn</span>
+            <span class="tech-pill">Feature Store</span>
+            <span class="tech-pill">MLflow</span>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px; padding:14px 18px; background:rgba(255,62,138,0.06); border-radius:10px; border:1px dashed rgba(255,62,138,0.3);">
+        <div style="font-size:12px; color:var(--pink-light); font-weight:500; margin-bottom:4px;">👑 Ensemble Layer</div>
+        <div style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace;">Both models are combined into a hybrid ensemble that outputs a unified demand spike score + confidence rating per product</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"></div></div>
+
+  <!-- LAYER 4: API -->
+
+  <div class="layer layer-api">
+    <div class="section-label">04 · Serving Layer</div>
+    <div class="layer-inner">
+      <div class="layer-title"><span class="icon">⚡</span> Flask REST API — Dockerized & Deployed</div>
+      <div class="cards cards-3">
+        <div class="card">
+          <span class="card-icon">🔌</span>
+          <div class="card-title">POST /predict/demand</div>
+          <div class="card-desc">Returns weekly demand forecast for a given product ID and platform</div>
+          <span class="card-tag tag-gold">Flask</span>
+        </div>
+        <div class="card">
+          <span class="card-icon">📡</span>
+          <div class="card-title">POST /predict/trend</div>
+          <div class="card-desc">Returns trend detection score and predicted spike timing for a product</div>
+          <span class="card-tag tag-gold">Flask</span>
+        </div>
+        <div class="card">
+          <span class="card-icon">🏆</span>
+          <div class="card-title">GET /products/top</div>
+          <div class="card-desc">Returns top 10 predicted product drops for the coming week</div>
+          <span class="card-tag tag-gold">Flask</span>
+        </div>
+      </div>
+      <div class="tech-row" style="margin-top:18px;">
+        <span class="tech-pill">🐳 Docker Container</span>
+        <span class="tech-pill">🔒 REST API</span>
+        <span class="tech-pill">📋 Pylint</span>
+        <span class="tech-pill">🧪 Pytest</span>
+        <span class="tech-pill">📦 requirements.txt</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow"><div class="arrow-line"></div></div>
+
+  <!-- LAYER 5: CI/CD + OUTPUT -->
+
+  <div class="layer layer-output">
+    <div class="section-label">05 · Automation & Output</div>
+    <div class="layer-inner">
+      <div class="layer-title"><span class="icon">🔄</span> CI/CD Pipeline + Dashboard</div>
+      <div class="cards cards-2">
+        <div class="card">
+          <span class="card-icon">🚀</span>
+          <div class="card-title">GitHub Actions CI/CD</div>
+          <div class="card-desc">On every push to main: runs Pylint → Pytest → builds Docker image → retrains models on new data → registers new version in MLflow → deploys updated API automatically</div>
+          <div class="tech-row">
+            <span class="tech-pill">GitHub Actions</span>
+            <span class="tech-pill">MLflow Registry</span>
+            <span class="tech-pill">Auto Retrain</span>
+          </div>
+        </div>
+        <div class="card">
+          <span class="card-icon">📱</span>
+          <div class="card-title">Demo Dashboard</div>
+          <div class="card-desc">Live web interface showing predicted product drops, demand spike charts, trend scores, and cross-platform TikTok Shop vs Amazon comparisons in real time</div>
+          <div class="tech-row">
+            <span class="tech-pill">Flask Templates</span>
+            <span class="tech-pill">Charts</span>
+            <span class="tech-pill">Live Predictions</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PORTFOLIO STORY -->
+
+  <div class="portfolio">
+    <div class="portfolio-title">👑 Your Portfolio Story</div>
+    <div class="portfolio-grid">
+      <div class="portfolio-card">
+        <div class="num">Project 01</div>
+        <div class="pname">Melanin Match AI</div>
+        <div class="pdesc">Computer Vision · Skin tone matching for beauty products</div>
+      </div>
+      <div class="portfolio-card">
+        <div class="num">Project 02</div>
+        <div class="pname">GoVirallQ</div>
+        <div class="pdesc">ML · Predicts what content goes viral on social media</div>
+      </div>
+      <div class="portfolio-card active">
+        <div class="num">Project 03 · Current</div>
+        <div class="pname">Drop Queen 👑</div>
+        <div class="pdesc">MLOps · Predicts which products sell because of viral content</div>
+      </div>
+    </div>
+    <div style="margin-top:20px; font-size:12px; color:var(--text-muted); font-style:italic; text-align:center;">
+      "I understand the full journey — from viral content creation → to product demand → to purchase behavior"
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+
+  <div class="footer">
+    <p>👑 <span>Drop Queen</span> · CISC 610 DevOps & MLOps · Mercy University · Spring 2026</p>
+    <p style="margin-top:8px;">Built by <span>Chastity Lewis</span> · @LavishCreativeCo</p>
+  </div>
+
+</div>
+</body>
+</html>
