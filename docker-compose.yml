@@ -1,0 +1,46 @@
+# DropQueen — Docker Compose
+version: "3.8"
+
+services:
+
+  # ── Flask API ──────────────────────────────────────────────────────────────
+  dropqueen-api:
+    build: .
+    container_name: dropqueen-api
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MLFLOW_TRACKING_URI=http://mlflow:5001
+    volumes:
+      - ./models:/app/models
+      - ./demand_model.pkl:/app/demand_model.pkl
+      - ./engagement_model.pkl:/app/engagement_model.pkl
+      - ./model_config.json:/app/model_config.json
+    depends_on:
+      - mlflow
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── MLflow Tracking Server ────────────────────────────────────────────────
+  mlflow:
+    image: python:3.11-slim
+    container_name: dropqueen-mlflow
+    ports:
+      - "5001:5001"
+    command: >
+      bash -c "pip install mlflow && mlflow server
+      --host 0.0.0.0
+      --port 5001
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root ./mlruns"
+    volumes:
+      - mlflow-data:/mlflow
+    restart: unless-stopped
+
+volumes:
+  mlflow-data:

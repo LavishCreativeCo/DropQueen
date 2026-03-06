@@ -1,0 +1,19 @@
+# DropQueen API — Python Dependencies
+
+# Web Framework
+flask==3.0.0
+gunicorn==21.2.0
+
+# Machine Learning
+scikit-learn==1.4.0
+joblib==1.3.2
+
+# Data Processing
+pandas==2.1.4
+numpy==1.26.3
+
+# Model Tracking
+mlflow==2.10.0
+
+# Utilities
+python-dotenv==1.0.0
